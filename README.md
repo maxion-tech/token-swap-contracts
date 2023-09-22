@@ -1,4 +1,4 @@
-# 🔄 TokenSwap Project
+# 🔄 Maxion TokenSwap Project
 [![MythXBadge](https://badgen.net/https/api.mythx.io/v1/projects/cac9d71a-34ae-4b54-8fc3-c90bfdd50e18/badge/data?cache=300&icon=https://raw.githubusercontent.com/ConsenSys/mythx-github-badge/main/logo_white.svg)](https://docs.mythx.io/dashboard/github-badges)
 
 The TokenSwap project is a blockchain-based initiative that allows for the seamless swapping of tokens. It involves two ERC-20 compliant tokens. This project employs smart contracts deployed on the Ethereum network and is developed using Solidity, along with the Hardhat development environment.
