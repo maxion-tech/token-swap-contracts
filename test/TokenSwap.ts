@@ -41,14 +41,19 @@ describe("TokenSwap", function () {
 
     it("Should set the correct transferTokenFeePercentage and mintableTokenFeePercentage", async function () {
       const { tokenSwap } = await loadFixture(loadTokenSwapFixture);
-      await tokenSwap.setFees(10, 0);
-      expect(await tokenSwap.transferTokenFeePercentage()).to.equal(10);
+      await tokenSwap.setFees(10 * 10 ** 8, 0);
+      expect(await tokenSwap.transferTokenFeePercentage()).to.equal(10 * 10 ** 8);
       expect(await tokenSwap.mintableTokenFeePercentage()).to.equal(0);
+    });
+
+    it("Shoud revert if transferTokenFeePercentage is greater than 100%", async function () {
+      const { tokenSwap } = await loadFixture(loadTokenSwapFixture);
+      await expect(tokenSwap.setFees(101 * 10 ** 8, 0)).to.be.revertedWith("TokenSwap: Transfer Token fee percentage must be less than or equal to 100");
     });
   });
 
   describe("Swap Functionality", function () {
-    it("swapMintableToTransfer: Should correctly swap at rate 3 transferToken per 1 mintableToken with all 0% fee", async function () {
+    it("Should correctly swap at rate 3 transferToken per 1 mintableToken with all 0% fee", async function () {
       const { tokenSwap, transferToken, mintableToken, addr1, owner } = await loadFixture(loadTokenSwapFixture);
 
       // First Test
@@ -70,11 +75,11 @@ describe("TokenSwap", function () {
       expect(await transferToken.balanceOf(addr1.address)).to.equal(expectedTransferAmount);
     });
 
-    it("swapMintableToTransfer: Should correctly swap at rate 3 transferToken per 1 mintableToken with all transferTokenFeePercentage = 10% fee", async function () {
+    it("Should correctly swap at rate 3 transferToken per 1 mintableToken with all transferTokenFeePercentage = 10% fee", async function () {
       const { tokenSwap, transferToken, mintableToken, addr1, owner } = await loadFixture(loadTokenSwapFixture);
 
       // Set transferTokenFeePercentage to 10%
-      await tokenSwap.setFees(10, 0);
+      await tokenSwap.setFees(10 * 10 ** 8, 0);
 
       // First Test
       const amountTransfer = ethers.parseEther('300');
@@ -96,11 +101,11 @@ describe("TokenSwap", function () {
 
     });
 
-    it("swapMintableToTransfer: Should correctly swap at rate 3 transferToken per 1 mintableToken with all mintableTokenFeePercentage = 10% fee", async function () {
+    it("Should correctly swap at rate 3 transferToken per 1 mintableToken with all mintableTokenFeePercentage = 10% fee", async function () {
       const { tokenSwap, transferToken, mintableToken, addr1, owner } = await loadFixture(loadTokenSwapFixture);
 
       // Set mintableTokenFeePercentage to 10%
-      await tokenSwap.setFees(0, 10);
+      await tokenSwap.setFees(0, 10 * 10 ** 8);
 
       // First Test
       const amountTransfer = ethers.parseEther('300');
@@ -121,11 +126,11 @@ describe("TokenSwap", function () {
       expect(await transferToken.balanceOf(addr1.address)).to.equal(expectedTransferAmount);
     });
 
-    it("swapMintableToTransfer: Should correctly swap at rate 3 transferToken per 1 mintableToken with all transferTokenFeePercentage = 10% and mintableTokenFeePercentage = 10% fee", async function () {
+    it("Should correctly swap at rate 3 transferToken per 1 mintableToken with all transferTokenFeePercentage = 10% and mintableTokenFeePercentage = 10% fee", async function () {
       const { tokenSwap, transferToken, mintableToken, addr1, owner } = await loadFixture(loadTokenSwapFixture);
 
       // Set transferTokenFeePercentage to 10% and mintableTokenFeePercentage to 10%
-      await tokenSwap.setFees(10, 10);
+      await tokenSwap.setFees(10 * 10 ** 8, 10 * 10 ** 8);
 
       // First Test
       const amountTransfer = ethers.parseEther('300');
@@ -144,6 +149,49 @@ describe("TokenSwap", function () {
       await mintableToken.connect(addr1).approve(await tokenSwap.getAddress(), amountMintable);
       await tokenSwap.connect(addr1).swapMintableToTransfer(amountMintable);
       expect(await transferToken.balanceOf(addr1.address)).to.equal(expectedTransferAmount);
+    });
+
+    it("Should correctly swap at rate 3 transferToken per 1 mintableToken with all transferTokenFeePercentage = 100% and mintableTokenFeePercentage = 100% fee", async function () {
+      const { tokenSwap, transferToken, mintableToken, addr1, owner } = await loadFixture(loadTokenSwapFixture);
+
+      // Set transferTokenFeePercentage to 100% and mintableTokenFeePercentage to 100%
+      await tokenSwap.setFees(100 * 10 ** 8, 100 * 10 ** 8);
+
+      // First Test
+      const amountTransfer = ethers.parseEther('300');
+      const expectedMintableAmount = ethers.parseEther('0'); // Corrected to 0
+
+      await transferToken.connect(owner).mint(addr1.address, amountTransfer);
+      await transferToken.connect(addr1).approve(await tokenSwap.getAddress(), amountTransfer);
+      await tokenSwap.connect(addr1).swapTransferToMintable(amountTransfer);
+      expect(await mintableToken.balanceOf(addr1.address)).to.equal(expectedMintableAmount);
+
+      // Second Test
+      const amountMintable = ethers.parseEther('100');
+      const expectedTransferAmount = ethers.parseEther('0'); // Corrected to 0
+
+      await mintableToken.connect(owner).mint(addr1.address, amountMintable);
+      await mintableToken.connect(addr1).approve(await tokenSwap.getAddress(), amountMintable);
+      await tokenSwap.connect(addr1).swapMintableToTransfer(amountMintable);
+      expect(await transferToken.balanceOf(addr1.address)).to.equal(expectedTransferAmount);
+    });
+
+    it("Should calculate correct amount of transferToken to swap", async function () {
+      const { tokenSwap } = await loadFixture(loadTokenSwapFixture);
+
+      await tokenSwap.setFees(0, 10 * 10 ** 8);
+
+      // First Test
+      const amountTransfer = ethers.parseEther('300');
+      const expectedMintableAmount = ethers.parseEther('100'); // Corrected to 100
+
+      expect(await tokenSwap.getMintableAmount(amountTransfer)).to.equal(expectedMintableAmount);
+
+      // Second Test
+      const amountMintable = ethers.parseEther('100');
+      const expectedTransferAmount = ethers.parseEther('270'); // Corrected to 270
+
+      expect(await tokenSwap.getTransferAmount(amountMintable)).to.equal(expectedTransferAmount);
     });
   });
 

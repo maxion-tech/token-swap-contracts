@@ -26,6 +26,8 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
     uint256 public rate; // Rate at which the tokens can be swapped
     uint256 public transferTokenFeePercentage; // Fee percentage for transferring token
     uint256 public mintableTokenFeePercentage; // Fee percentage for mintable token
+    uint256 public constant DENOMINATOR = 10 ** 10; // Denominator for calculating fee percentage
+    uint256 public constant FEE_PERCENTAGE_MAX = 100 * 10 ** 8; // Maximum fee percentage
 
     event RateSet(uint256 newRate); // Event emitted when the rate is set
     event FeesSet(
@@ -60,16 +62,24 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
         uint256 _transferTokenFeePercentage,
         uint256 _mintableTokenFeePercentage
     ) {
-        require(_admin != address(0), "Admin address cannot be 0");
+        require(_admin != address(0), "TokenSwap: Admin address cannot be 0");
         require(
             _transferToken != address(0),
-            "Transfer Token address cannot be 0"
+            "TokenSwap: Transfer Token address cannot be 0"
         );
         require(
             _mintableToken != address(0),
-            "Mintable Token address cannot be 0"
+            "TokenSwap: Mintable Token address cannot be 0"
         );
-        require(_rate > 0, "Rate must be greater than 0");
+        require(_rate > 0, "TokenSwap: Rate must be greater than 0");
+        require(
+            _transferTokenFeePercentage <= FEE_PERCENTAGE_MAX,
+            "TokenSwap: Transfer Token fee percentage must be less than or equal to 100"
+        );
+        require(
+            _mintableTokenFeePercentage <= FEE_PERCENTAGE_MAX,
+            "TokenSwap: Mintable Token fee percentage must be less than or equal to 100"
+        );
 
         _setupRole(DEFAULT_ADMIN_ROLE, _admin); // Assigns the admin role to the specified address
 
@@ -85,7 +95,7 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
      * @param _rate - New rate to set.
      */
     function setRate(uint256 _rate) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_rate > 0, "Rate must be greater than 0");
+        require(_rate > 0, "TokenSwap: Rate must be greater than 0");
         rate = _rate;
         emit RateSet(_rate); // Emits an event after setting the rate
     }
@@ -99,6 +109,14 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
         uint256 _transferTokenFeePercentage,
         uint256 _mintableTokenFeePercentage
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(
+            _transferTokenFeePercentage <= FEE_PERCENTAGE_MAX,
+            "TokenSwap: Transfer Token fee percentage must be less than or equal to 100"
+        );
+        require(
+            _mintableTokenFeePercentage <= FEE_PERCENTAGE_MAX,
+            "TokenSwap: Mintable Token fee percentage must be less than or equal to 100"
+        );
         transferTokenFeePercentage = _transferTokenFeePercentage;
         mintableTokenFeePercentage = _mintableTokenFeePercentage;
         emit FeesSet(_transferTokenFeePercentage, _mintableTokenFeePercentage); // Emits an event after setting the fees
@@ -111,11 +129,11 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
     function swapTransferToMintable(
         uint256 amount
     ) external whenNotPaused nonReentrant {
-        require(amount > 0, "Amount must be greater than 0");
+        require(amount > 0, "TokenSwap: Amount must be greater than 0");
 
-        uint256 fee = (amount * transferTokenFeePercentage) / 100; // Calculates the fee
+        uint256 fee = (amount * transferTokenFeePercentage) / DENOMINATOR; // Calculates the fee
         uint256 amountToSwap = amount - fee; // Amount after deducting the fee
-        uint256 mintableAmount = amountToSwap / rate; // Calculates the equivalent mintable token amount
+        uint256 mintableAmount = (amountToSwap * 1e18) / (rate * 1e18); // Calculates the equivalent mintable token amount
 
         transferToken.safeTransferFrom(msg.sender, address(this), amount); // Transfers the specified amount of transfer tokens from the user to this contract
         mintableToken.mint(msg.sender, mintableAmount); // Mints the equivalent amount of mintable tokens to the user
@@ -130,15 +148,39 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
     function swapMintableToTransfer(
         uint256 amount
     ) external whenNotPaused nonReentrant {
-        require(amount > 0, "Amount must be greater than 0");
+        require(amount > 0, "TokenSwap: Amount must be greater than 0");
 
-        uint256 fee = (amount * mintableTokenFeePercentage) / 100; // Calculates the fee
+        uint256 fee = (amount * mintableTokenFeePercentage) / DENOMINATOR; // Calculates the fee
         uint256 amountToSwap = amount - fee; // Amount after deducting the fee
-        uint256 transferAmount = amountToSwap * rate; // Calculates the equivalent transfer token amount
+        uint256 transferAmount = (amountToSwap * rate * 1e18) / 1e18; // Calculates the equivalent transfer token amount
 
         mintableToken.burnFrom(msg.sender, amount); // Burns the specified amount of mintable tokens from the user
         transferToken.safeTransfer(msg.sender, transferAmount); // Transfers the equivalent amount of transfer tokens to the user
 
         emit SwappedMintableToTransfer(msg.sender, amount, transferAmount); // Emits an event after swapping the tokens
+    }
+
+    /**
+     * @dev Calculates the amount of mintable tokens that will be received for the specified amount of transfer tokens.
+     * @param amount - Amount of transfer tokens to swap.
+     */
+    function getMintableAmount(uint256 amount) external view returns (uint256) {
+        require(amount > 0, "TokenSwap: Amount must be greater than 0");
+        uint256 fee = (amount * transferTokenFeePercentage) / DENOMINATOR; // Calculates the fee
+        uint256 amountToSwap = amount - fee; // Amount after deducting the fee
+        uint256 mintableAmount = (amountToSwap * 1e18) / (rate * 1e18); // Calculates the equivalent mintable token amount
+        return mintableAmount;
+    }
+
+    /**
+     * @dev Calculates the amount of transfer tokens that will be received for the specified amount of mintable tokens.
+     * @param amount - Amount of mintable tokens to swap.
+     */
+    function getTransferAmount(uint256 amount) external view returns (uint256) {
+        require(amount > 0, "TokenSwap: Amount must be greater than 0");
+        uint256 fee = (amount * mintableTokenFeePercentage) / DENOMINATOR; // Calculates the fee
+        uint256 amountToSwap = amount - fee; // Amount after deducting the fee
+        uint256 transferAmount = (amountToSwap * rate * 1e18) / 1e18; // Calculates the equivalent transfer token amount
+        return transferAmount;
     }
 }
