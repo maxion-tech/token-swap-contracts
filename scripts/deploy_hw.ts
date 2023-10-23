@@ -1,10 +1,7 @@
 import hre, { ethers } from "hardhat";
 
 async function main() {
-  const [deployer] = await hre.ethers.getSigners();
-
-  console.log("Deploying contracts with the account:", deployer.address);
-
+  const deployer = (await hre.ethers.getSigners())[0];
   // Get TransferToken and MintableToken addresses from environment variables
   const transferTokenAddress = process.env.TRANSFER_TOKEN_ADDRESS;
   const mintableTokenAddress = process.env.MINTABLE_TOKEN_ADDRESS
