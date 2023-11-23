@@ -182,4 +182,13 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
         uint256 transferAmount = (amountToSwap * rate * 1e18) / 1e18; // Calculates the equivalent transfer token amount
         return transferAmount;
     }
+
+
+    function pause() public onlyRole(PAUSER_ROLE) {
+        _pause();
+    }
+
+    function unpause() public onlyRole(PAUSER_ROLE) {
+        _unpause();
+    }
 }
