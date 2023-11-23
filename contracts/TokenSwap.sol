@@ -19,8 +19,8 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
 
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE"); // Role identifier for pausing functionality of the contract
 
-    IERC20 public transferToken; // Token that can be transferred by users
-    IERC20MintableBurnable public mintableToken; // Token that can be minted and burnt
+    IERC20 public immutable transferToken; // Token that can be transferred by users
+    IERC20MintableBurnable public immutable mintableToken; // Token that can be minted and burnt
 
     uint256 public rate; // Rate at which the tokens can be swapped
     uint256 public transferTokenFeePercentage; // Fee percentage for transferring token
