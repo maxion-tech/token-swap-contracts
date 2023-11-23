@@ -140,7 +140,7 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
 
         uint256 fee = (amount * transferTokenFeePercentage) / DENOMINATOR; // Calculates the fee
         uint256 amountToSwap = amount - fee; // Amount after deducting the fee
-        uint256 mintableAmount = (amountToSwap * 1e18) / (rate * 1e18); // Calculates the equivalent mintable token amount
+        uint256 mintableAmount = amountToSwap / rate; // Calculates the equivalent mintable token amount
 
         transferToken.safeTransferFrom(msg.sender, address(this), amount); // Transfers the specified amount of transfer tokens from the user to this contract
         mintableToken.mint(msg.sender, mintableAmount); // Mints the equivalent amount of mintable tokens to the user
@@ -159,7 +159,7 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
 
         uint256 fee = (amount * mintableTokenFeePercentage) / DENOMINATOR; // Calculates the fee
         uint256 amountToSwap = amount - fee; // Amount after deducting the fee
-        uint256 transferAmount = (amountToSwap * rate * 1e18) / 1e18; // Calculates the equivalent transfer token amount
+        uint256 transferAmount = amountToSwap * rate; // Calculates the equivalent transfer token amount
 
         mintableToken.burnFrom(msg.sender, amount); // Burns the specified amount of mintable tokens from the user
         transferToken.safeTransfer(msg.sender, transferAmount); // Transfers the equivalent amount of transfer tokens to the user
@@ -175,7 +175,7 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
         require(amount > 0, "TokenSwap: Amount must be greater than 0");
         uint256 fee = (amount * transferTokenFeePercentage) / DENOMINATOR; // Calculates the fee
         uint256 amountToSwap = amount - fee; // Amount after deducting the fee
-        uint256 mintableAmount = (amountToSwap * 1e18) / (rate * 1e18); // Calculates the equivalent mintable token amount
+        uint256 mintableAmount = amountToSwap / rate; // Calculates the equivalent mintable token amount
         return mintableAmount;
     }
 
@@ -187,7 +187,7 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
         require(amount > 0, "TokenSwap: Amount must be greater than 0");
         uint256 fee = (amount * mintableTokenFeePercentage) / DENOMINATOR; // Calculates the fee
         uint256 amountToSwap = amount - fee; // Amount after deducting the fee
-        uint256 transferAmount = (amountToSwap * rate * 1e18) / 1e18; // Calculates the equivalent transfer token amount
+        uint256 transferAmount = amountToSwap * rate; // Calculates the equivalent transfer token amount
         return transferAmount;
     }
 
