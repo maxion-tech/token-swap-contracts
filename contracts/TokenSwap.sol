@@ -26,7 +26,8 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
     uint256 public transferTokenFeePercentage; // Fee percentage for transferring token
     uint256 public mintableTokenFeePercentage; // Fee percentage for mintable token
     uint256 public constant DENOMINATOR = 10 ** 10; // Denominator for calculating fee percentage
-    uint256 public constant FEE_PERCENTAGE_MAX = 100 * 10 ** 8; // Maximum fee percentage
+    uint256 public constant FEE_PERCENTAGE_MAX = 90 * 10 ** 8; // Maximum fee percentage (90%)
+    uint256 public constant MAX_RATE = 200; // Maximum rate
 
     event RateSet(uint256 newRate); // Event emitted when the rate is set
     event FeesSet(
@@ -94,7 +95,10 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
      * @param _rate - New rate to set.
      */
     function setRate(uint256 _rate) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_rate > 0, "TokenSwap: Rate must be greater than 0");
+        require(
+            _rate > 0 && _rate <= MAX_RATE,
+            "TokenSwap: Rate must be greater than 0 and less than max rate"
+        );
         rate = _rate;
         emit RateSet(_rate); // Emits an event after setting the rate
     }
@@ -182,7 +186,6 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
         uint256 transferAmount = (amountToSwap * rate * 1e18) / 1e18; // Calculates the equivalent transfer token amount
         return transferAmount;
     }
-
 
     function pause() public onlyRole(PAUSER_ROLE) {
         _pause();
