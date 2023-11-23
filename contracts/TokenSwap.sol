@@ -80,6 +80,10 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
             _mintableTokenFeePercentage <= FEE_PERCENTAGE_MAX,
             "TokenSwap: Mintable Token fee percentage must be less than or equal to 100"
         );
+        require(
+            _transferToken != _mintableToken,
+            "TokenSwap: Transfer Token and Mintable Token cannot be same"
+        );
 
         _setupRole(DEFAULT_ADMIN_ROLE, _admin); // Assigns the admin role to the specified address
 
