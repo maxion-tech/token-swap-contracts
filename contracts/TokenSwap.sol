@@ -15,7 +15,6 @@ import "./interfaces/IERC20MintableBurnable.sol";
  */
 contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
     using SafeERC20 for IERC20;
-    using SafeERC20 for IERC20MintableBurnable;
 
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE"); // Role identifier for pausing functionality of the contract
 
