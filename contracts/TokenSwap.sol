@@ -148,11 +148,16 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
     ) external whenNotPaused nonReentrant {
         require(amount > 0, "TokenSwap: Amount must be greater than 0");
 
-        uint256 fee = (amount * transferTokenFeePercentage) / DENOMINATOR; // Calculates the fee
-        uint256 amountToSwap = amount - fee; // Amount after deducting the fee
+        uint256 initialBalance = transferToken.balanceOf(address(this));
+        transferToken.safeTransferFrom(msg.sender, address(this), amount); // Transfers the specified amount of transfer tokens from the user to this contract
+        uint256 finalBalance = transferToken.balanceOf(address(this));
+        uint256 actualReceived = finalBalance - initialBalance;
+
+        uint256 fee = (actualReceived * transferTokenFeePercentage) /
+            DENOMINATOR; // Calculates the fee
+        uint256 amountToSwap = actualReceived - fee; // Amount after deducting the fee
         uint256 mintableAmount = amountToSwap / rate; // Calculates the equivalent mintable token amount
 
-        transferToken.safeTransferFrom(msg.sender, address(this), amount); // Transfers the specified amount of transfer tokens from the user to this contract
         mintableToken.mint(msg.sender, mintableAmount); // Mints the equivalent amount of mintable tokens to the user
 
         emit SwappedTransferToMintable(msg.sender, amount, mintableAmount); // Emits an event after swapping the tokens
