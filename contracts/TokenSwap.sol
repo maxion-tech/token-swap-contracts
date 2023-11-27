@@ -183,7 +183,8 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
 
     /**
      * @dev Calculates the amount of mintable tokens that will be received for the specified amount of transfer tokens.
-     * @param amount - Amount of transfer tokens to swap.
+     * @param amount The amount of transfer tokens to swap.
+     * @return mintableAmount The calculated amount of mintable tokens to be received.
      */
     function getMintableAmount(uint256 amount) external view returns (uint256) {
         require(amount > 0, "TokenSwap: Amount must be greater than 0");
@@ -195,7 +196,8 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
 
     /**
      * @dev Calculates the amount of transfer tokens that will be received for the specified amount of mintable tokens.
-     * @param amount - Amount of mintable tokens to swap.
+     * @param amount The amount of mintable tokens to swap.
+     * @return transferAmount The calculated amount of transfer tokens to be received.
      */
     function getTransferAmount(uint256 amount) external view returns (uint256) {
         require(amount > 0, "TokenSwap: Amount must be greater than 0");
