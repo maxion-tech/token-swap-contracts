@@ -29,10 +29,12 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
     uint256 public constant FEE_PERCENTAGE_MAX = 90 * 10 ** 8; // Maximum fee percentage (90%)
     uint256 public constant MAX_RATE = 200; // Maximum rate
 
-    event RateSet(uint256 newRate); // Event emitted when the rate is set
+    event RateSet(uint256 oldRate, uint256 newRate); // Event emitted when the rate is set
     event FeesSet(
-        uint256 transferTokenFeePercentage,
-        uint256 mintableTokenFeePercentage
+        uint256 oldTransferTokenFeePercentage,
+        uint256 newTransferTokenFeePercentage,
+        uint256 oldMintableTokenFeePercentage,
+        uint256 newMintableTokenFeePercentage
     ); // Event emitted when the fees are set
     event SwappedTransferToMintable(
         address indexed user,
@@ -103,8 +105,9 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
             _rate > 0 && _rate <= MAX_RATE,
             "TokenSwap: Rate must be greater than 0 and less than max rate"
         );
+        uint256 oldRate = rate;
         rate = _rate;
-        emit RateSet(_rate); // Emits an event after setting the rate
+        emit RateSet(oldRate, _rate);
     }
 
     /**
@@ -124,9 +127,16 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
             _mintableTokenFeePercentage <= FEE_PERCENTAGE_MAX,
             "TokenSwap: Mintable Token fee percentage must be less than or equal to 100"
         );
+        uint256 oldTransferTokenFeePercentage = transferTokenFeePercentage;
+        uint256 oldMintableTokenFeePercentage = mintableTokenFeePercentage;
         transferTokenFeePercentage = _transferTokenFeePercentage;
         mintableTokenFeePercentage = _mintableTokenFeePercentage;
-        emit FeesSet(_transferTokenFeePercentage, _mintableTokenFeePercentage); // Emits an event after setting the fees
+        emit FeesSet(
+            oldTransferTokenFeePercentage,
+            _transferTokenFeePercentage,
+            oldMintableTokenFeePercentage,
+            _mintableTokenFeePercentage
+        );
     }
 
     /**
