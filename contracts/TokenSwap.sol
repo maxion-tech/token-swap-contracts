@@ -88,6 +88,7 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
         );
 
         _setupRole(DEFAULT_ADMIN_ROLE, _admin); // Assigns the admin role to the specified address
+        _setupRole(PAUSER_ROLE, _admin); // Assigns the pauser role to the specified address
 
         transferToken = IERC20(_transferToken); // Sets the transfer token
         mintableToken = IERC20MintableBurnable(_mintableToken); // Sets the mintable token
