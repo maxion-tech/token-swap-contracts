@@ -146,7 +146,7 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
      */
     function swapTransferToMintable(
         uint256 amount
-    ) external whenNotPaused nonReentrant {
+    ) external nonReentrant whenNotPaused {
         require(amount > 0, "TokenSwap: Amount must be greater than 0");
 
         uint256 initialBalance = transferToken.balanceOf(address(this));
@@ -170,7 +170,7 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
      */
     function swapMintableToTransfer(
         uint256 amount
-    ) external whenNotPaused nonReentrant {
+    ) external nonReentrant whenNotPaused {
         require(amount > 0, "TokenSwap: Amount must be greater than 0");
 
         uint256 fee = (amount * mintableTokenFeePercentage) / DENOMINATOR; // Calculates the fee
