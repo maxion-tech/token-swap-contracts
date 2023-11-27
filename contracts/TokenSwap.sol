@@ -85,8 +85,8 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
             "TokenSwap: Transfer Token and Mintable Token cannot be same"
         );
 
-        _setupRole(DEFAULT_ADMIN_ROLE, _admin); // Assigns the admin role to the specified address
-        _setupRole(PAUSER_ROLE, _admin); // Assigns the pauser role to the specified address
+        _grantRole(DEFAULT_ADMIN_ROLE, _admin); // Assigns the admin role to the specified address
+        _grantRole(PAUSER_ROLE, _admin); // Assigns the pauser role to the specified address
 
         transferToken = IERC20(_transferToken); // Sets the transfer token
         mintableToken = IERC20MintableBurnable(_mintableToken); // Sets the mintable token
