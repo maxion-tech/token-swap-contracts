@@ -47,94 +47,94 @@ contract TokenSwap is Pausable, AccessControlEnumerable, ReentrancyGuard {
 
     /**
      * @dev Contract constructor that sets initial values.
-     * @param _admin - Address of the admin.
-     * @param _transferToken - Address of the transferable token.
-     * @param _mintableToken - Address of the mintable token.
-     * @param _rate - Initial rate for token swap.
-     * @param _transferTokenFeePercentage - Initial transfer token fee percentage.
-     * @param _mintableTokenFeePercentage - Initial mintable token fee percentage.
+     * @param admin_ - Address of the admin.
+     * @param transferToken_ - Address of the transferable token.
+     * @param mintableToken_ - Address of the mintable token.
+     * @param rate_ - Initial rate for token swap.
+     * @param transferTokenFeePercentage_ - Initial transfer token fee percentage.
+     * @param mintableTokenFeePercentage_ - Initial mintable token fee percentage.
      */
     constructor(
-        address _admin,
-        address _transferToken,
-        address _mintableToken,
-        uint256 _rate,
-        uint256 _transferTokenFeePercentage,
-        uint256 _mintableTokenFeePercentage
+        address admin_,
+        address transferToken_,
+        address mintableToken_,
+        uint256 rate_,
+        uint256 transferTokenFeePercentage_,
+        uint256 mintableTokenFeePercentage_
     ) {
-        require(_admin != address(0), "TokenSwap: Admin address cannot be 0");
+        require(admin_ != address(0), "TokenSwap: Admin address cannot be 0");
         require(
-            _transferToken != address(0),
+            transferToken_ != address(0),
             "TokenSwap: Transfer Token address cannot be 0"
         );
         require(
-            _mintableToken != address(0),
+            mintableToken_ != address(0),
             "TokenSwap: Mintable Token address cannot be 0"
         );
-        require(_rate > 0, "TokenSwap: Rate must be greater than 0");
+        require(rate_ > 0, "TokenSwap: Rate must be greater than 0");
         require(
-            _transferTokenFeePercentage <= FEE_PERCENTAGE_MAX,
+            transferTokenFeePercentage_ <= FEE_PERCENTAGE_MAX,
             "TokenSwap: Transfer Token fee percentage must be less than or equal to 100"
         );
         require(
-            _mintableTokenFeePercentage <= FEE_PERCENTAGE_MAX,
+            mintableTokenFeePercentage_ <= FEE_PERCENTAGE_MAX,
             "TokenSwap: Mintable Token fee percentage must be less than or equal to 100"
         );
         require(
-            _transferToken != _mintableToken,
+            transferToken_ != mintableToken_,
             "TokenSwap: Transfer Token and Mintable Token cannot be same"
         );
 
-        _grantRole(DEFAULT_ADMIN_ROLE, _admin); // Assigns the admin role to the specified address
-        _grantRole(PAUSER_ROLE, _admin); // Assigns the pauser role to the specified address
+        _grantRole(DEFAULT_ADMIN_ROLE, admin_); // Assigns the admin role to the specified address
+        _grantRole(PAUSER_ROLE, admin_); // Assigns the pauser role to the specified address
 
-        transferToken = IERC20(_transferToken); // Sets the transfer token
-        mintableToken = IERC20MintableBurnable(_mintableToken); // Sets the mintable token
-        rate = _rate; // Sets the rate
-        transferTokenFeePercentage = _transferTokenFeePercentage; // Sets the transfer token fee percentage
-        mintableTokenFeePercentage = _mintableTokenFeePercentage; // Sets the mintable token fee percentage
+        transferToken = IERC20(transferToken_); // Sets the transfer token
+        mintableToken = IERC20MintableBurnable(mintableToken_); // Sets the mintable token
+        rate = rate_; // Sets the rate
+        transferTokenFeePercentage = transferTokenFeePercentage_; // Sets the transfer token fee percentage
+        mintableTokenFeePercentage = mintableTokenFeePercentage_; // Sets the mintable token fee percentage
     }
 
     /**
      * @dev Allows admin to set the rate of the token swap.
-     * @param _rate - New rate to set.
+     * @param rate_ - New rate to set.
      */
-    function setRate(uint256 _rate) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setRate(uint256 rate_) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(
-            _rate > 0 && _rate <= MAX_RATE,
+            rate_ > 0 && rate_ <= MAX_RATE,
             "TokenSwap: Rate must be greater than 0 and less than max rate"
         );
         uint256 oldRate = rate;
-        rate = _rate;
-        emit RateSet(oldRate, _rate);
+        rate = rate_;
+        emit RateSet(oldRate, rate_);
     }
 
     /**
      * @dev Allows admin to set the fees for token swap.
-     * @param _transferTokenFeePercentage - New transfer token fee percentage to set.
-     * @param _mintableTokenFeePercentage - New mintable token fee percentage to set.
+     * @param transferTokenFeePercentage_ - New transfer token fee percentage to set.
+     * @param mintableTokenFeePercentage_ - New mintable token fee percentage to set.
      */
     function setFees(
-        uint256 _transferTokenFeePercentage,
-        uint256 _mintableTokenFeePercentage
+        uint256 transferTokenFeePercentage_,
+        uint256 mintableTokenFeePercentage_
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(
-            _transferTokenFeePercentage <= FEE_PERCENTAGE_MAX,
+            transferTokenFeePercentage_ <= FEE_PERCENTAGE_MAX,
             "TokenSwap: Transfer Token fee percentage must be less than or equal to 100"
         );
         require(
-            _mintableTokenFeePercentage <= FEE_PERCENTAGE_MAX,
+            mintableTokenFeePercentage_ <= FEE_PERCENTAGE_MAX,
             "TokenSwap: Mintable Token fee percentage must be less than or equal to 100"
         );
         uint256 oldTransferTokenFeePercentage = transferTokenFeePercentage;
         uint256 oldMintableTokenFeePercentage = mintableTokenFeePercentage;
-        transferTokenFeePercentage = _transferTokenFeePercentage;
-        mintableTokenFeePercentage = _mintableTokenFeePercentage;
+        transferTokenFeePercentage = transferTokenFeePercentage_;
+        mintableTokenFeePercentage = mintableTokenFeePercentage_;
         emit FeesSet(
             oldTransferTokenFeePercentage,
-            _transferTokenFeePercentage,
+            transferTokenFeePercentage_,
             oldMintableTokenFeePercentage,
-            _mintableTokenFeePercentage
+            mintableTokenFeePercentage_
         );
     }
 
